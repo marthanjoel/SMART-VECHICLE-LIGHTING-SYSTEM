@@ -1,0 +1,62 @@
+int photoPin = A0;
+
+int redPin = 5;
+int greenPin = 6;
+int bluePin = 9;
+
+int CLK = 3;
+int DT  = 2;
+
+int brightness = 120;
+int nightThreshold = 600;
+
+int lastCLK;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(CLK, INPUT_PULLUP);
+  pinMode(DT, INPUT_PULLUP);
+
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+
+  lastCLK = digitalRead(CLK);
+}
+
+void loop() {
+  int currentCLK = digitalRead(CLK);
+
+  // 🔑 Detect ONLY rising edge
+  if (lastCLK == LOW && currentCLK == HIGH) {
+
+    // 🔑 Direction check
+    if (digitalRead(DT) == LOW) {
+      brightness += 5;   // one direction → increase
+    } else {
+      brightness -= 5;   // other direction → decrease
+    }
+
+    brightness = constrain(brightness, 0, 255);
+
+    Serial.print("Brightness: ");
+    Serial.println(brightness);
+  }
+
+  lastCLK = currentCLK;
+
+  int lightValue = analogRead(photoPin);
+
+  if (lightValue < nightThreshold) {
+    analogWrite(redPin, brightness);
+    analogWrite(greenPin, brightness);
+    analogWrite(bluePin, brightness);
+  } else {
+    analogWrite(redPin, 0);
+    analogWrite(greenPin, 0);
+    analogWrite(bluePin, 0);
+  }
+
+  delay(2); // small debounce
+}
